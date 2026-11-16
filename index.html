@@ -1,0 +1,1165 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Panel de Administración - Pastelería ULCITA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+
+        /* HEADER */
+        .admin-header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 25px 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .admin-header h1 { font-size: 1.6rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 12px; }
+        .admin-header h1 i { color: #f39c12; }
+        .admin-header .subtitle { font-size: 0.85rem; color: #bdc3c7; margin-top: 4px; }
+        .header-actions { display: flex; gap: 10px; align-items: center; }
+        .btn-header {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .btn-header:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); color: white; }
+        .btn-header.success { background: linear-gradient(135deg, #25d366, #128C7E); border-color: transparent; }
+        .btn-header.success:hover { box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4); }
+
+        /* TOOLBAR */
+        .toolbar {
+            background: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .search-box { flex: 1; min-width: 250px; position: relative; }
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 2px solid #ecf0f1;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        .search-box input:focus { border-color: #3498db; box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1); }
+        .search-box i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #95a5a6; }
+        .filter-select {
+            padding: 12px 20px;
+            border: 2px solid #ecf0f1;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            background: white;
+            cursor: pointer;
+            outline: none;
+        }
+        .filter-select:focus { border-color: #3498db; }
+        .stats-badge {
+            background: #ecf0f1;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .stats-badge strong { color: #e74c3c; }
+
+        /* GRID */
+        .admin-container { max-width: 1500px; margin: 0 auto; padding: 0 25px; }
+        .admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 25px; }
+
+        .admin-card {
+            background: white;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid transparent;
+        }
+        .admin-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.15); border-color: #3498db; }
+        .admin-card.inactive { opacity: 0.6; border-color: #e74c3c; }
+
+        .admin-card .card-image {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+        .admin-card .card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+        .admin-card .card-image:hover img { transform: scale(1.08); }
+        .card-image .image-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            color: white;
+            font-size: 1.5rem;
+        }
+        .card-image:hover .image-overlay { opacity: 1; }
+
+        .card-image .status-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            padding: 5px 14px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            z-index: 5;
+        }
+        .status-badge.active { background: #2ecc71; color: white; }
+        .status-badge.inactive { background: #e74c3c; color: white; }
+
+        .card-image .price-badge {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .admin-card .card-body { padding: 18px 20px; flex: 1; display: flex; flex-direction: column; }
+        .admin-card .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .admin-card .card-title .id-badge {
+            background: #ecf0f1;
+            color: #7f8c8d;
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 50px;
+            font-weight: 600;
+        }
+        .admin-card .card-description {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex: 1;
+        }
+        .admin-card .card-meta {
+            display: flex;
+            gap: 10px;
+            font-size: 0.75rem;
+            color: #95a5a6;
+            margin-bottom: 15px;
+            padding-top: 12px;
+            border-top: 1px solid #ecf0f1;
+        }
+        .admin-card .card-meta span { display: flex; align-items: center; gap: 5px; }
+
+        .card-actions { display: flex; gap: 8px; }
+        .btn-action {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-action.edit { background: linear-gradient(135deg, #3498db, #2980b9); color: white; }
+        .btn-action.edit:hover { box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4); transform: translateY(-2px); }
+        .btn-action.delete { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; flex: 0 0 auto; padding: 10px 14px; }
+        .btn-action.delete:hover { box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4); transform: translateY(-2px); }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .modal-overlay.active { display: flex; align-items: flex-start; justify-content: center; }
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 800px;
+            width: 100%;
+            margin: auto;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #f8f9fa, #ecf0f1);
+            border-radius: 20px 20px 0 0;
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #95a5a6;
+            cursor: pointer;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .modal-close:hover { background: #e74c3c; color: white; transform: rotate(90deg); }
+
+        .modal-body { padding: 25px; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #2c3e50; margin-bottom: 8px; }
+        .form-group label .required { color: #e74c3c; }
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            outline: none;
+            font-family: inherit;
+        }
+        .form-control:focus { border-color: #3498db; box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1); }
+        textarea.form-control { resize: vertical; min-height: 80px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        /* Preview de imagen */
+        .image-preview-container {
+            position: relative;
+            background: #f8f9fa;
+            border: 2px dashed #bdc3c7;
+            border-radius: 12px;
+            height: 220px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+        .image-preview-container img { width: 100%; height: 100%; object-fit: cover; }
+        .image-preview-container .placeholder { text-align: center; color: #95a5a6; }
+        .image-preview-container .placeholder i { font-size: 2.5rem; margin-bottom: 10px; display: block; }
+
+        .image-actions { display: flex; gap: 10px; }
+        .btn-image-action {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ecf0f1;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #2c3e50;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn-image-action:hover { border-color: #3498db; color: #3498db; }
+        .btn-image-action input[type="file"] { display: none; }
+
+        /* Switch */
+        .switch-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #2ecc71; }
+        input:checked + .slider:before { transform: translateX(24px); }
+        .switch-label { font-size: 0.9rem; font-weight: 600; color: #2c3e50; }
+        .switch-hint { font-size: 0.75rem; color: #95a5a6; margin-top: 2px; }
+
+        /* Footer */
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid #ecf0f1;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            background: #f8f9fa;
+            border-radius: 0 0 20px 20px;
+        }
+        .btn-modal {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .btn-cancel { background: white; color: #7f8c8d; border: 2px solid #ecf0f1; }
+        .btn-cancel:hover { background: #ecf0f1; }
+        .btn-save { background: linear-gradient(135deg, #27ae60, #229954); color: white; }
+        .btn-save:hover { box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4); transform: translateY(-2px); }
+        .btn-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .loading-overlay.active { display: flex; }
+        .loading-overlay .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top-color: #f39c12;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .loading-overlay p { color: white; font-weight: 600; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transform: translateX(400px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 3000;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.success { background: linear-gradient(135deg, #27ae60, #229954); }
+        .toast.error { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .toast i { font-size: 1.2rem; }
+
+        /* Barra de progreso de subida */
+        .upload-progress {
+            display: none;
+            margin-top: 10px;
+            background: #ecf0f1;
+            border-radius: 50px;
+            height: 8px;
+            overflow: hidden;
+        }
+        .upload-progress.active { display: block; }
+        .upload-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 50px;
+        }
+        .upload-progress-text {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        /* Empty */
+        .empty-state { text-align: center; padding: 80px 20px; grid-column: 1 / -1; }
+        .empty-state i { font-size: 4rem; color: #bdc3c7; margin-bottom: 20px; }
+        .empty-state h3 { color: #7f8c8d; margin-bottom: 10px; }
+        .empty-state p { color: #95a5a6; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .admin-header { padding: 18px 20px; flex-direction: column; align-items: flex-start; gap: 15px; }
+            .admin-header h1 { font-size: 1.3rem; }
+            .header-actions { width: 100%; }
+            .btn-header { flex: 1; justify-content: center; font-size: 0.8rem; padding: 8px 14px; }
+            .toolbar { padding: 15px 20px; }
+            .admin-container { padding: 0 15px; }
+            .admin-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .modal-overlay { padding: 10px; }
+            .modal-body { padding: 18px; }
+            .toast { left: 15px; right: 15px; bottom: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="admin-header d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1>
+                <i class="fas fa-cake-candles"></i>
+                Panel de Administración
+            </h1>
+            <div class="subtitle">Pastelería ULCITA · Gestión de catálogo</div>
+        </div>
+        <div class="header-actions">
+            <a href="index.html" class="btn-header" target="_blank">
+                <i class="fas fa-store"></i> Ver Tienda
+            </a>
+            <button class="btn-header success" id="btnNuevoPastel">
+                <i class="fas fa-plus"></i> Nuevo Pastel
+            </button>
+        </div>
+    </header>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Buscar por nombre o descripción...">
+        </div>
+        <select class="filter-select" id="filterEstado">
+            <option value="all">Todos los estados</option>
+            <option value="active">Solo activos</option>
+            <option value="inactive">Solo inactivos</option>
+        </select>
+        <div class="stats-badge" id="statsBadge">Cargando...</div>
+    </div>
+
+    <!-- GRID -->
+    <div class="admin-container">
+        <div class="admin-grid" id="adminGrid">
+            <div class="empty-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Cargando pasteles...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <i class="fas fa-pen-to-square" style="color: #3498db;"></i>
+                    <span id="modalTitle">Editar Pastel</span>
+                </h3>
+                <button class="modal-close" id="modalClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="pastelForm">
+                    <input type="hidden" id="pastelId">
+
+                    <!-- Imagen -->
+                    <div class="form-group">
+                        <label>Imagen del Pastel</label>
+                        <div class="image-preview-container" id="imagePreviewContainer">
+                            <div class="placeholder" id="imagePlaceholder">
+                                <i class="fas fa-image"></i>
+                                <div>Sin imagen</div>
+                            </div>
+                            <img id="imagePreview" src="" alt="Preview" style="display: none;">
+                        </div>
+                        <div class="image-actions">
+                            <label class="btn-image-action">
+                                <i class="fas fa-upload"></i> Subir a Supabase
+                                <input type="file" id="imageFileInput" accept="image/*">
+                            </label>
+                            <button type="button" class="btn-image-action" id="btnChangeUrl">
+                                <i class="fas fa-link"></i> Usar URL
+                            </button>
+                        </div>
+                        <div class="upload-progress" id="uploadProgress">
+                            <div class="upload-progress-bar" id="uploadProgressBar"></div>
+                        </div>
+                        <div class="upload-progress-text" id="uploadProgressText" style="display:none;"></div>
+                        <input type="text" class="form-control" id="imagenUrl" placeholder="https://..." style="margin-top: 10px; font-size: 0.85rem;">
+                        <small style="color: #95a5a6; font-size: 0.75rem;">Pega una URL o sube una imagen directamente a Supabase Storage</small>
+                    </div>
+
+                    <!-- Nombre -->
+                    <div class="form-group">
+                        <label>Nombre / Clase <span class="required">*</span></label>
+                        <input type="text" class="form-control" id="clasePastel" required placeholder="Ej: Chocolate, Vainilla...">
+                    </div>
+
+                    <!-- Precio y Veces -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Precio (Q) <span class="required">*</span></label>
+                            <input type="number" class="form-control" id="precio" required step="0.01" min="0" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Veces Pedido</label>
+                            <input type="number" class="form-control" id="vecesPedido" min="0" placeholder="0">
+                        </div>
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="form-group">
+                        <label>Descripción</label>
+                        <textarea class="form-control" id="descripcion" rows="3" placeholder="Describe el pastel..."></textarea>
+                    </div>
+
+                    <!-- Estado -->
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <div class="switch-group">
+                            <label class="switch">
+                                <input type="checkbox" id="activo" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <div>
+                                <div class="switch-label" id="activoLabel">Activo</div>
+                                <div class="switch-hint">Los pasteles inactivos no se muestran en la tienda</div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-cancel" id="btnCancelar">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button class="btn-modal btn-save" id="btnGuardar">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p id="loadingText">Guardando...</p>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle" id="toastIcon"></i>
+        <span id="toastText"></span>
+    </div>
+
+    <script>
+        // ============================================================
+        // CONFIGURACIÓN
+        // ============================================================
+        const SUPABASE_URL = 'https://lxjfrkjtixssjdvkwjpn.supabase.co';
+        const SUPABASE_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4amZya2p0aXhzc2pkdmt3anBuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTkwMDgyNiwiZXhwIjoyMDk3NDc2ODI2fQ.JTwxhj4b1lYZ4xpcxBo5oPy9oXr7LFVu_uG-oMdaKKE';
+
+        // ⚠️ IMPORTANTE: Cambia esto por el nombre REAL de tu bucket en Supabase Storage
+        // Ve a tu proyecto Supabase → Storage → busca el bucket donde guardas las imágenes de pasteles
+        const STORAGE_BUCKET = 'PASTELES'; // <-- AJUSTA ESTE NOMBRE
+
+        // ============================================================
+        // ESTADO GLOBAL
+        // ============================================================
+        let todosPasteles = [];
+        let pastelEditando = null;
+
+        // ============================================================
+        // UTILIDADES
+        // ============================================================
+        function formatearURLImagen(url) {
+            if (!url) return '';
+            // Si es una URL externa ya formada, la devolvemos tal cual
+            if (url.startsWith('http')) return url;
+            // Si es una ruta dentro del bucket, construimos la URL pública
+            if (!url.startsWith('http')) {
+                return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${url}`;
+            }
+            return url;
+        }
+
+        function mostrarToast(mensaje, tipo = 'success') {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toastText');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toast.className = `toast ${tipo}`;
+            toastIcon.className = tipo === 'success'
+                ? 'fas fa-check-circle'
+                : 'fas fa-exclamation-circle';
+            toastText.textContent = mensaje;
+
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        function mostrarLoading(texto = 'Procesando...') {
+            document.getElementById('loadingText').textContent = texto;
+            document.getElementById('loadingOverlay').classList.add('active');
+        }
+
+        function ocultarLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+
+        // ============================================================
+        // API SUPABASE - TABLA PASTELES
+        // ============================================================
+        async function obtenerTodosPasteles() {
+            const response = await fetch(
+                `${SUPABASE_URL}/rest/v1/pasteles?select=*&order=id_pastel.asc`,
+                {
+                    headers: {
+                        'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+                    }
+                }
+            );
+            if (!response.ok) throw new Error('Error al obtener pasteles');
+            return await response.json();
+        }
+
+        async function actualizarPastel(id, datos) {
+            const response = await fetch(
+                `${SUPABASE_URL}/rest/v1/pasteles?id_pastel=eq.${id}`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(datos)
+                }
+            );
+            if (!response.ok) {
+                const err = await response.text();
+                throw new Error(err);
+            }
+            return await response.json();
+        }
+
+        async function crearPastel(datos) {
+            const response = await fetch(
+                `${SUPABASE_URL}/rest/v1/pasteles`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(datos)
+                }
+            );
+            if (!response.ok) {
+                const err = await response.text();
+                throw new Error(err);
+            }
+            return await response.json();
+        }
+
+        async function eliminarPastel(id) {
+            const response = await fetch(
+                `${SUPABASE_URL}/rest/v1/pasteles?id_pastel=eq.${id}`,
+                {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+                    }
+                }
+            );
+            if (!response.ok) throw new Error('Error al eliminar');
+            return true;
+        }
+
+        // ============================================================
+        // SUBIDA A SUPABASE STORAGE
+        // ============================================================
+        async function subirImagenSupabase(file) {
+            // Generar nombre único para evitar colisiones
+            const extension = file.name.split('.').pop();
+            const timestamp = Date.now();
+            const nombreLimpio = file.name
+                .replace(/\.[^/.]+$/, '') // quitar extensión
+                .replace(/[^a-zA-Z0-9_-]/g, '_') // solo caracteres seguros
+                .substring(0, 50);
+            const nombreArchivo = `${timestamp}_${nombreLimpio}.${extension}`;
+
+            // Simular progreso (fetch no da progreso real, pero mostramos animación)
+            const progressBar = document.getElementById('uploadProgressBar');
+            const progressText = document.getElementById('uploadProgressText');
+            document.getElementById('uploadProgress').classList.add('active');
+            progressText.style.display = 'block';
+            progressBar.style.width = '30%';
+            progressText.textContent = 'Subiendo imagen...';
+
+            const response = await fetch(
+                `${SUPABASE_URL}/storage/v1/object/${STORAGE_BUCKET}/${nombreArchivo}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                        'Content-Type': file.type,
+                        'x-upsert': 'true'
+                    },
+                    body: file
+                }
+            );
+
+            progressBar.style.width = '80%';
+
+            if (!response.ok) {
+                const err = await response.text();
+                document.getElementById('uploadProgress').classList.remove('active');
+                progressText.style.display = 'none';
+                throw new Error(`Error al subir: ${err}`);
+            }
+
+            progressBar.style.width = '100%';
+            progressText.textContent = '¡Imagen subida!';
+
+            setTimeout(() => {
+                document.getElementById('uploadProgress').classList.remove('active');
+                progressText.style.display = 'none';
+                progressBar.style.width = '0%';
+            }, 1500);
+
+            // Retornar la URL pública
+            return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${nombreArchivo}`;
+        }
+
+        // ============================================================
+        // RENDERIZADO
+        // ============================================================
+        function renderizarGrid(pasteles) {
+            const grid = document.getElementById('adminGrid');
+            grid.innerHTML = '';
+
+            if (!pasteles || pasteles.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-cake-candles"></i>
+                        <h3>No hay pasteles</h3>
+                        <p>${todosPasteles.length === 0 ? 'Crea tu primer pastel con el botón "Nuevo Pastel"' : 'No se encontraron resultados con los filtros aplicados'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            pasteles.forEach(pastel => {
+                const card = document.createElement('div');
+                card.className = `admin-card ${pastel.activo ? '' : 'inactive'}`;
+
+                const imagenUrl = formatearURLImagen(
+                    pastel.imagen_url ||
+                    'https://images.unsplash.com/photo-1586788684334-913b8bd2a16d?w=400&h=300&fit=crop'
+                );
+
+                card.innerHTML = `
+                    <div class="card-image" data-id="${pastel.id_pastel}">
+                        <span class="status-badge ${pastel.activo ? 'active' : 'inactive'}">
+                            ${pastel.activo ? '● ACTIVO' : '● INACTIVO'}
+                        </span>
+                        <img src="${imagenUrl}" alt="${pastel.clase_pastel || 'Pastel'}"
+                             onerror="this.src='https://images.unsplash.com/photo-1586788684334-913b8bd2a16d?w=400&h=300&fit=crop'">
+                        <div class="image-overlay">
+                            <i class="fas fa-expand"></i>
+                        </div>
+                        <div class="price-badge">Q${parseFloat(pastel.precio || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">
+                            <span>${pastel.clase_pastel || 'Sin nombre'}</span>
+                            <span class="id-badge">#${pastel.id_pastel}</span>
+                        </div>
+                        <p class="card-description">${pastel.descripcion || 'Sin descripción'}</p>
+                        <div class="card-meta">
+                            <span><i class="fas fa-shopping-cart"></i> ${pastel.veces_pedido || 0} pedidos</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn-action edit" data-id="${pastel.id_pastel}">
+                                <i class="fas fa-pen"></i> Editar
+                            </button>
+                            <button class="btn-action delete" data-id="${pastel.id_pastel}" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                card.querySelector('.card-image').addEventListener('click', () => {
+                    window.open(imagenUrl, '_blank');
+                });
+
+                card.querySelector('.btn-action.edit').addEventListener('click', () => {
+                    abrirModalEdicion(pastel);
+                });
+
+                card.querySelector('.btn-action.delete').addEventListener('click', () => {
+                    confirmarEliminar(pastel);
+                });
+
+                grid.appendChild(card);
+            });
+        }
+
+        // ============================================================
+        // FILTROS
+        // ============================================================
+        function aplicarFiltros() {
+            const busqueda = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtroEstado = document.getElementById('filterEstado').value;
+
+            let filtrados = todosPasteles.filter(p => {
+                if (filtroEstado === 'active' && !p.activo) return false;
+                if (filtroEstado === 'inactive' && p.activo) return false;
+                if (busqueda) {
+                    const texto = `${p.clase_pastel || ''} ${p.descripcion || ''}`.toLowerCase();
+                    if (!texto.includes(busqueda)) return false;
+                }
+                return true;
+            });
+
+            renderizarGrid(filtrados);
+
+            const activos = todosPasteles.filter(p => p.activo).length;
+            const inactivos = todosPasteles.length - activos;
+            document.getElementById('statsBadge').innerHTML =
+                `Total: <strong>${todosPasteles.length}</strong> · Activos: <strong>${activos}</strong> · Inactivos: <strong>${inactivos}</strong>`;
+        }
+
+        // ============================================================
+        // MODAL
+        // ============================================================
+        function abrirModalEdicion(pastel = null) {
+            pastelEditando = pastel;
+            const modal = document.getElementById('modalOverlay');
+            const title = document.getElementById('modalTitle');
+
+            if (pastel) {
+                title.textContent = `Editar: ${pastel.clase_pastel || 'Pastel'}`;
+                document.getElementById('pastelId').value = pastel.id_pastel;
+                document.getElementById('clasePastel').value = pastel.clase_pastel || '';
+                document.getElementById('precio').value = pastel.precio || '';
+                document.getElementById('vecesPedido').value = pastel.veces_pedido || 0;
+                document.getElementById('descripcion').value = pastel.descripcion || '';
+                document.getElementById('activo').checked = pastel.activo !== false;
+                document.getElementById('imagenUrl').value = pastel.imagen_url || '';
+                actualizarPreviewImagen(pastel.imagen_url || '');
+                actualizarLabelActivo();
+            } else {
+                title.textContent = 'Nuevo Pastel';
+                document.getElementById('pastelForm').reset();
+                document.getElementById('pastelId').value = '';
+                document.getElementById('activo').checked = true;
+                document.getElementById('vecesPedido').value = 0;
+                document.getElementById('imagenUrl').value = '';
+                actualizarPreviewImagen('');
+                actualizarLabelActivo();
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+            pastelEditando = null;
+        }
+
+        function actualizarPreviewImagen(url) {
+            const preview = document.getElementById('imagePreview');
+            const placeholder = document.getElementById('imagePlaceholder');
+
+            if (url && url.trim()) {
+                preview.src = formatearURLImagen(url);
+                preview.style.display = 'block';
+                placeholder.style.display = 'none';
+                preview.onerror = () => {
+                    preview.style.display = 'none';
+                    placeholder.style.display = 'block';
+                    placeholder.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#e74c3c"></i><div>No se pudo cargar la imagen</div>';
+                };
+            } else {
+                preview.style.display = 'none';
+                placeholder.style.display = 'block';
+                placeholder.innerHTML = '<i class="fas fa-image"></i><div>Sin imagen</div>';
+            }
+        }
+
+        function actualizarLabelActivo() {
+            const activo = document.getElementById('activo').checked;
+            document.getElementById('activoLabel').textContent = activo ? 'Activo' : 'Inactivo';
+        }
+
+        // ============================================================
+        // GUARDAR
+        // ============================================================
+        async function guardarPastel() {
+            const id = document.getElementById('pastelId').value;
+            const clasePastel = document.getElementById('clasePastel').value.trim();
+            const precio = parseFloat(document.getElementById('precio').value);
+            const vecesPedido = parseInt(document.getElementById('vecesPedido').value) || 0;
+            const descripcion = document.getElementById('descripcion').value.trim();
+            const activo = document.getElementById('activo').checked;
+            const imagenUrl = document.getElementById('imagenUrl').value.trim();
+
+            if (!clasePastel) {
+                mostrarToast('El nombre es obligatorio', 'error');
+                return;
+            }
+            if (isNaN(precio) || precio < 0) {
+                mostrarToast('El precio debe ser un número válido', 'error');
+                return;
+            }
+
+            const datos = {
+                clase_pastel: clasePastel,
+                precio: precio,
+                veces_pedido: vecesPedido,
+                descripcion: descripcion || null,
+                activo: activo,
+                imagen_url: imagenUrl || null
+            };
+
+            const btnGuardar = document.getElementById('btnGuardar');
+            btnGuardar.disabled = true;
+
+            try {
+                mostrarLoading(id ? 'Actualizando pastel...' : 'Creando pastel...');
+
+                if (id) {
+                    await actualizarPastel(id, datos);
+                    mostrarToast('Pastel actualizado correctamente', 'success');
+                } else {
+                    await crearPastel(datos);
+                    mostrarToast('Pastel creado correctamente', 'success');
+                }
+
+                ocultarLoading();
+                cerrarModal();
+                await cargarPasteles();
+            } catch (error) {
+                ocultarLoading();
+                console.error(error);
+                mostrarToast('Error: ' + error.message, 'error');
+            } finally {
+                btnGuardar.disabled = false;
+            }
+        }
+
+        // ============================================================
+        // ELIMINAR
+        // ============================================================
+        async function confirmarEliminar(pastel) {
+            const confirmar = confirm(
+                `¿Eliminar el pastel "${pastel.clase_pastel}"?\n\nEsta acción no se puede deshacer.\n\n(La imagen en Storage NO se elimina automáticamente)`
+            );
+            if (!confirmar) return;
+
+            try {
+                mostrarLoading('Eliminando pastel...');
+                await eliminarPastel(pastel.id_pastel);
+                ocultarLoading();
+                mostrarToast('Pastel eliminado', 'success');
+                await cargarPasteles();
+            } catch (error) {
+                ocultarLoading();
+                mostrarToast('Error al eliminar: ' + error.message, 'error');
+            }
+        }
+
+        // ============================================================
+        // CARGA
+        // ============================================================
+        async function cargarPasteles() {
+            try {
+                const pasteles = await obtenerTodosPasteles();
+                todosPasteles = pasteles;
+                aplicarFiltros();
+            } catch (error) {
+                console.error(error);
+                document.getElementById('adminGrid').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle" style="color:#e74c3c"></i>
+                        <h3>Error al cargar</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ============================================================
+        // EVENTOS
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarPasteles();
+
+            document.getElementById('btnNuevoPastel').addEventListener('click', () => abrirModalEdicion(null));
+
+            document.getElementById('modalClose').addEventListener('click', cerrarModal);
+            document.getElementById('btnCancelar').addEventListener('click', cerrarModal);
+            document.getElementById('modalOverlay').addEventListener('click', (e) => {
+                if (e.target.id === 'modalOverlay') cerrarModal();
+            });
+
+            document.getElementById('btnGuardar').addEventListener('click', guardarPastel);
+
+            document.getElementById('searchInput').addEventListener('input', aplicarFiltros);
+            document.getElementById('filterEstado').addEventListener('change', aplicarFiltros);
+
+            document.getElementById('activo').addEventListener('change', actualizarLabelActivo);
+
+            document.getElementById('imagenUrl').addEventListener('input', (e) => {
+                actualizarPreviewImagen(e.target.value);
+            });
+
+            document.getElementById('btnChangeUrl').addEventListener('click', () => {
+                document.getElementById('imagenUrl').focus();
+            });
+
+            // Subida a Supabase Storage
+            document.getElementById('imageFileInput').addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (!file.type.startsWith('image/')) {
+                    mostrarToast('Solo se permiten imágenes', 'error');
+                    return;
+                }
+
+                if (file.size > 10 * 1024 * 1024) {
+                    mostrarToast('La imagen no debe superar 10MB', 'error');
+                    return;
+                }
+
+                try {
+                    const url = await subirImagenSupabase(file);
+                    document.getElementById('imagenUrl').value = url;
+                    actualizarPreviewImagen(url);
+                    mostrarToast('Imagen subida a Supabase Storage', 'success');
+                } catch (error) {
+                    console.error(error);
+                    mostrarToast('Error al subir: ' + error.message, 'error');
+                }
+
+                e.target.value = '';
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && document.getElementById('modalOverlay').classList.contains('active')) {
+                    cerrarModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
